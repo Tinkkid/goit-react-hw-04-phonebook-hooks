@@ -1,7 +1,9 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { nanoid } from 'nanoid';
 import Swal from 'sweetalert2';
 
+import { useLocalStorage } from 'hooks/useLocalStorage';
+import defaultValue from '../../data/contacts.json';
 import { ContactForm } from 'components/ContactForm /ContactForm';
 import { ContactList } from 'components/ContactList/ContactList';
 import { Filter } from 'components/Filter/Filter';
@@ -9,45 +11,21 @@ import { MainSection, ContactsTitle, Title } from './App.styled';
 
 const STORAGE_KEY = 'contacts';
 
-export class App extends Component {
-  state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
-  };
+export const App = () => {
+  const [filter, setFilter] = useState('');
+  const [contacts, setContacts] = useLocalStorage(STORAGE_KEY, defaultValue);
 
-  componentDidMount() {
-    const contacts = localStorage.getItem(STORAGE_KEY, this.state.contacts);
-    console.log(contacts);
-    const parsedContacts = JSON.parse(contacts);
-
-    if (parsedContacts) {
-      this.setState({ contacts: parsedContacts });
-    }
-  }
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.contacts !== prevState.contacts) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state.contacts));
-    }
-  }
-
-  addContacts = ({ name, number }) => {
+  const addContacts = (name, number) => {
     const newObj = {
       id: nanoid(),
       name,
       number,
     };
-    console.log(newObj);
 
-    const dublicateOfName = this.state.contacts.some(
+    const dublicateOfName = contacts.some(
       contact => contact.name.toLowerCase() === name.toLowerCase()
     );
-
-    const dublicateOfNumber = this.state.contacts.some(
+    const dublicateOfNumber = contacts.some(
       contact =>
         contact.number.replace(/-/g, '').replace(/ /g, '') ===
         number.replace(/ /g, '').replace(/-/g, '')
@@ -63,51 +41,34 @@ export class App extends Component {
       return false;
     }
 
-    this.setState(({ contacts }) => ({
-      contacts: [newObj, ...contacts],
-    }));
-
-    console.log(number.replace(/-/g, ''));
+    setContacts(prevState => [newObj, ...prevState]);
   };
 
-  filterContacts = event => {
-    this.setState({
-      filter: event.currentTarget.value,
-    });
+  const filterContacts = event => {
+    setFilter(event.target.value);
   };
 
-  getVisibleContacts = () => {
-    const { filter, contacts } = this.state;
-    const normalizedFilter = filter.toLowerCase();
+  const getVisibleContacts = value => {
+    const filterNormalize = value.toLowerCase();
     return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(normalizedFilter)
+      contact.name.toLowerCase().includes(filterNormalize)
     );
   };
 
-  deleteContact = id => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== id),
-    }));
+  const deleteContact = id => {
+    setContacts(contacts.filter(contact => contact.id !== id));
   };
 
-  render() {
-    const { filter, contacts } = this.state;
-    const visibleContacts = this.getVisibleContacts();
-    return (
-      <MainSection>
-        <Title>Phonebook</Title>
-        <ContactForm onSubmit={this.addContacts} />
-        <ContactsTitle>Contacts</ContactsTitle>
-        <Filter
-          value={filter}
-          contacts={contacts}
-          onChange={this.filterContacts}
-        />
-        <ContactList
-          contacts={visibleContacts}
-          deleteContact={this.deleteContact}
-        />
-      </MainSection>
-    );
-  }
-}
+  return (
+    <MainSection>
+      <Title>Phonebook</Title>
+      <ContactForm onSubmit={addContacts} />
+      <ContactsTitle>Contacts</ContactsTitle>
+      <Filter value={filter} contacts={contacts} onChange={filterContacts} />
+      <ContactList
+        filtered={getVisibleContacts(filter)}
+        deleteContact={deleteContact}
+      />
+    </MainSection>
+  );
+};

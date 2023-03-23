@@ -14,14 +14,17 @@ export const InputForContact = styled.input`
   padding: 5px;
   font-size: 16px;
   border-radius: 5px;
-  border: 1px solid #7c73e0;
-`
+  border: 1px solid #fff;
+  box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25),
+    inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+  outline: none;
+`;
 
 export const LabelInputContact = styled.label`
-   display: flex;
-   flex-direction: column;
-   margin-bottom: 20px;
-`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+`;
 export const BtnSubmit = styled.button`
   width: fit-content;
   padding: 6px 14px;
